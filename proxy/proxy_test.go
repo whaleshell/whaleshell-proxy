@@ -35,15 +35,10 @@ func TestCONNECTAllowDeny(t *testing.T) {
 	}()
 	_, backendPort, _ := net.SplitHostPort(backend.Addr().String())
 
-	doc := policy.Document{
-		Version: 1,
-		Network: &policy.Network{
-			Default: "deny",
-			Allow: []policy.AllowRule{
-				{ID: "local", Host: "127.0.0.1", Port: mustAtoi(backendPort)},
-			},
-		},
-	}
+	doc := policy.Document{Version: 1}
+	doc.SetNetworkAllows([]policy.AllowRule{
+		{ID: "local", Host: "127.0.0.1", Port: mustAtoi(backendPort)},
+	})
 	var eng engine.Allowlist
 	if err := eng.Apply(doc); err != nil {
 		t.Fatal(err)
@@ -121,19 +116,14 @@ func TestAbsoluteFormL7(t *testing.T) {
 	defer backend.Close()
 	_, bport, _ := net.SplitHostPort(bln.Addr().String())
 
-	doc := policy.Document{
-		Version: 1,
-		Network: &policy.Network{
-			Default: "deny",
-			Allow: []policy.AllowRule{{
-				ID:       "local",
-				Host:     "127.0.0.1",
-				Port:     mustAtoi(bport),
-				Protocol: "rest",
-				Access:   "read-only",
-			}},
-		},
-	}
+	doc := policy.Document{Version: 1}
+	doc.SetNetworkAllows([]policy.AllowRule{{
+		ID:       "local",
+		Host:     "127.0.0.1",
+		Port:     mustAtoi(bport),
+		Protocol: "rest",
+		Access:   "read-only",
+	}})
 	var eng engine.Allowlist
 	if err := eng.Apply(doc); err != nil {
 		t.Fatal(err)
@@ -196,20 +186,15 @@ func TestTLSTerminateL7(t *testing.T) {
 	defer origin.Close()
 	_, oport, _ := net.SplitHostPort(rawLn.Addr().String())
 
-	doc := policy.Document{
-		Version: 1,
-		Network: &policy.Network{
-			Default: "deny",
-			Allow: []policy.AllowRule{{
-				ID:       "local",
-				Host:     "127.0.0.1",
-				Port:     mustAtoi(oport),
-				Protocol: "rest",
-				TLS:      "terminate",
-				Access:   "read-only",
-			}},
-		},
-	}
+	doc := policy.Document{Version: 1}
+	doc.SetNetworkAllows([]policy.AllowRule{{
+		ID:       "local",
+		Host:     "127.0.0.1",
+		Port:     mustAtoi(oport),
+		Protocol: "rest",
+		TLS:      "terminate",
+		Access:   "read-only",
+	}})
 	var eng engine.Allowlist
 	if err := eng.Apply(doc); err != nil {
 		t.Fatal(err)

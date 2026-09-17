@@ -41,6 +41,22 @@ func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bin := callerBinary(r)
+	// inference.local is the managed privacy router — always allowed when configured.
+	if s.isInferenceLocal(host) {
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			http.Error(w, "hijack unsupported", http.StatusInternalServerError)
+			return
+		}
+		client, _, err := hj.Hijack()
+		if err != nil {
+			http.Error(w, "hijack failed", http.StatusInternalServerError)
+			return
+		}
+		defer client.Close()
+		s.handleInferenceLocal(w, r, client)
+		return
+	}
 	dec, err := eng.Decide(r.Context(), engine.EgressRequest{Host: host, Port: port, Binary: bin})
 	if err != nil {
 		http.Error(w, "policy error", http.StatusInternalServerError)

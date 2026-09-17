@@ -14,7 +14,14 @@ import (
 func TestWatchPolicyReload(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "policy.yaml")
-	body1 := []byte("version: 1\nnetwork:\n  default: deny\n  allow:\n    - id: a\n      host: a.example.com\n      port: 443\n")
+	body1 := []byte(`version: 1
+network_policies:
+  a:
+    name: a
+    endpoints:
+      - host: a.example.com
+        port: 443
+`)
 	if err := os.WriteFile(path, body1, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +38,14 @@ func TestWatchPolicyReload(t *testing.T) {
 	defer cancel()
 	go srv.WatchPolicy(ctx, path, 50*time.Millisecond)
 
-	body2 := []byte("version: 1\nnetwork:\n  default: deny\n  allow:\n    - id: b\n      host: b.example.com\n      port: 443\n")
+	body2 := []byte(`version: 1
+network_policies:
+  b:
+    name: b
+    endpoints:
+      - host: b.example.com
+        port: 443
+`)
 	time.Sleep(80 * time.Millisecond)
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
