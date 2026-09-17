@@ -26,6 +26,9 @@ func (s *Server) logAudit(ev auditEvent) {
 	ev.TS = time.Now().UTC().Format(time.RFC3339Nano)
 	line := formatOCSF(ev)
 	_, _ = fmt.Fprintln(s.audit, line)
+	if ev.Action == "deny" || ev.Action == "reject" {
+		s.recordDenial(line)
+	}
 }
 
 // formatOCSF renders NVIDIA OpenShell–compatible OCSF shorthand for agent observation.
@@ -161,7 +164,7 @@ func ocsfContext(ev auditEvent) string {
 	var parts []string
 	if ev.Reason != "" && ev.Action != "reload" {
 		// Avoid duplicating reason when it is already the sole detail.
-		if !(ev.Host == "" && ev.Method == "") {
+		if ev.Host != "" || ev.Method != "" {
 			parts = append(parts, "reason:"+ev.Reason)
 		}
 	}

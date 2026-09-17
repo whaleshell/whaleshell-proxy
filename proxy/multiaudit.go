@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -158,14 +157,6 @@ func (m *MultiAudit) Close() error {
 
 // Ensure MultiAudit is an io.Writer.
 var _ io.Writer = (*MultiAudit)(nil)
-
-// Discard scanner helper for tests.
-func scanLines(r io.Reader, fn func(string)) {
-	sc := bufio.NewScanner(r)
-	for sc.Scan() {
-		fn(sc.Text())
-	}
-}
 
 // LifecycleReady emits a LIFECYCLE line onto w.
 func LifecycleReady(w io.Writer, detail string) {

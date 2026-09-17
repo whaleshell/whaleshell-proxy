@@ -31,6 +31,8 @@ type EgressProxy interface {
 type Server struct {
 	mu            sync.RWMutex
 	eng           engine.PolicyEngine
+	doc           policy.Document
+	policyGen     int
 	audit         io.Writer
 	server        *http.Server
 	ca            *MitmCA
@@ -40,6 +42,9 @@ type Server struct {
 	// UpstreamTLS overrides the TLS client config used when dialing real backends after terminate.
 	// Tests may set InsecureSkipVerify; production leaves this nil (system roots).
 	UpstreamTLS *tls.Config
+
+	denials   []denialLine
+	proposals map[string]*localProposal
 }
 
 // NewServer builds a CONNECT/HTTP proxy with an ephemeral MITM CA. audit defaults to stderr.
@@ -59,6 +64,7 @@ func NewServer(eng engine.PolicyEngine, audit io.Writer) *Server {
 		eng: eng, audit: audit, ca: ca,
 		secrets:    LoadSecretsFromEnviron(os.Environ()),
 		Middleware: middleware.FromEnviron(os.Environ()),
+		proposals:  map[string]*localProposal{},
 	}
 }
 
@@ -76,7 +82,19 @@ func (s *Server) Apply(_ context.Context, doc policy.Document) error {
 	if s.eng == nil {
 		return fmt.Errorf("proxy: %w", core.ErrNotImplemented)
 	}
-	return s.eng.Apply(doc)
+	if err := s.eng.Apply(doc); err != nil {
+		return err
+	}
+	s.doc = doc
+	s.policyGen++
+	return nil
+}
+
+// CurrentDocument returns the last successfully applied policy (copy).
+func (s *Server) CurrentDocument() policy.Document {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.doc
 }
 
 // Close shuts down the HTTP server if Serve was used.
@@ -246,13 +264,12 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rewSecrets := secrets
 	bound := []string(nil)
 	if dec.Matched != nil {
 		bound = dec.Matched.Rule.CredentialKeys
 	}
 	used := PlaceholderKeysInRequest(r)
-	rewSecrets, err = SecretsForEndpoint(secrets, bound, used)
+	rewSecrets, err := SecretsForEndpoint(secrets, bound, used)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("osg-proxy: credential_endpoint_mismatch\n"))
@@ -335,10 +352,6 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 		Action: "allow", Host: host, Port: port, Reason: dec.Reason, Allow: true,
 		Method: r.Method, Path: pathOnly,
 	})
-}
-
-func tunnel(a, b net.Conn) {
-	tunnelWithBuf(a, b, nil)
 }
 
 func (s *Server) runMiddleware(ctx context.Context, host string, port int, method, pathOnly string, hdr http.Header) error {

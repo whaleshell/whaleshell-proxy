@@ -41,7 +41,7 @@ func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bin := callerBinary(r)
-	// inference.local is the managed privacy router — always allowed when configured.
+	// inference.local / policy.local are managed sandbox-local adapters.
 	if s.isInferenceLocal(host) {
 		hj, ok := w.(http.Hijacker)
 		if !ok {
@@ -57,6 +57,21 @@ func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
 		s.handleInferenceLocal(w, r, client)
 		return
 	}
+	if s.isPolicyLocal(host) {
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			http.Error(w, "hijack unsupported", http.StatusInternalServerError)
+			return
+		}
+		client, _, err := hj.Hijack()
+		if err != nil {
+			http.Error(w, "hijack failed", http.StatusInternalServerError)
+			return
+		}
+		defer client.Close()
+		s.handlePolicyLocal(w, r, client)
+		return
+	}
 	dec, err := eng.Decide(r.Context(), engine.EgressRequest{Host: host, Port: port, Binary: bin})
 	if err != nil {
 		http.Error(w, "policy error", http.StatusInternalServerError)
@@ -64,8 +79,10 @@ func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !dec.Allow {
+		body := DenyBodyJSON(host, port, dec.Reason)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		_, _ = w.Write([]byte("osg-proxy: denied\n"))
+		_, _ = w.Write(body)
 		s.logAudit(auditEvent{Action: "deny", Host: host, Port: port, Reason: dec.Reason, Allow: false, Binary: bin})
 		return
 	}
@@ -188,7 +205,7 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 		}
 		dec, err := s.decideHTTP(req, eng, host, port, pathOnly, binary)
 		if err != nil || !dec.Allow {
-			reason := "policy error"
+			var reason string
 			if err == nil {
 				reason = dec.Reason
 			} else {
@@ -239,14 +256,12 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 			return
 		}
 
-		rewSecrets := secrets
 		bound := []string(nil)
 		if dec.Matched != nil {
 			bound = dec.Matched.Rule.CredentialKeys
 		}
 		used := PlaceholderKeysInRequest(req)
-		var bindErr error
-		rewSecrets, bindErr = SecretsForEndpoint(secrets, bound, used)
+		rewSecrets, bindErr := SecretsForEndpoint(secrets, bound, used)
 		if bindErr != nil {
 			s.logAudit(auditEvent{
 				Action: "deny", Host: host, Port: port, Reason: bindErr.Error(), Allow: false,

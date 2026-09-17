@@ -17,7 +17,7 @@ func TestRewriteHeaderQueryPathBasic(t *testing.T) {
 	}
 	req, _ := http.NewRequest(http.MethodGet, "http://api.example/bot"+env.PlaceholderPrefix+"API_KEY/x?token="+env.PlaceholderPrefix+"API_KEY", nil)
 	req.Header.Set("Authorization", "Bearer "+env.PlaceholderPrefix+"API_KEY")
-	basic := base64.StdEncoding.EncodeToString([]byte("user:"+env.PlaceholderPrefix+"PASS"))
+	basic := base64.StdEncoding.EncodeToString([]byte("user:" + env.PlaceholderPrefix + "PASS"))
 	req.Header.Set("X-Basic", "Basic "+basic)
 
 	if err := proxy.RewriteHTTPRequest(req, secrets); err != nil {
@@ -65,7 +65,7 @@ func TestRewriteLegacyPlaceholderAlias(t *testing.T) {
 
 func TestCredentialEndpointMismatch(t *testing.T) {
 	secrets := proxy.SecretStore{
-		"GITHUB_TOKEN": "gh-secret",
+		"GITHUB_TOKEN":   "gh-secret",
 		"OPENAI_API_KEY": "oai-secret",
 	}
 	req, _ := http.NewRequest(http.MethodGet, "http://api.openai.com/v1", nil)

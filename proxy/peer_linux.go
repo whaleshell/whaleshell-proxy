@@ -38,7 +38,9 @@ func peerPID(c net.Conn) (int, error) {
 		}
 		rc = sys
 	default:
-		if sc, ok := c.(interface{ SyscallConn() (syscall.RawConn, error) }); ok {
+		if sc, ok := c.(interface {
+			SyscallConn() (syscall.RawConn, error)
+		}); ok {
 			sys, err := sc.SyscallConn()
 			if err != nil {
 				return 0, err

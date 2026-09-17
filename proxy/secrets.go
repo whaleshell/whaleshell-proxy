@@ -164,9 +164,6 @@ func RewriteHTTPRequest(req *http.Request, secrets SecretStore) error {
 		req.URL.Path = path
 		req.URL.RawPath = ""
 		req.URL.RawQuery = rawQuery
-		if req.URL.Scheme == "" && req.RequestURI != "" {
-			// absolute-form already handled via URL fields
-		}
 	}
 	for k, vv := range req.Header {
 		for i, v := range vv {
