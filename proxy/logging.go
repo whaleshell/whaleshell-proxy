@@ -3,7 +3,7 @@ package proxy
 import (
 	"context"
 
-	"github.com/glaciforge/slogx"
+	"github.com/zorneth/slogx"
 )
 
 // InitLogging installs a corporate slogx logger as slog default for the proxy process.
