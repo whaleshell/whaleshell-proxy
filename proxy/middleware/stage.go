@@ -67,15 +67,15 @@ func (p *Pipeline) Run(ctx context.Context, req Request) (Decision, error) {
 	return Decision{Allow: true, Reason: "middleware allow", MutateHeaders: acc}, nil
 }
 
-// JWTStub verifies that Authorization Bearer is present and optionally matches aud claim (unverified parse).
-type JWTStub struct {
+// jwtStub verifies that Authorization Bearer is present and optionally matches aud claim (unverified parse).
+type jwtStub struct {
 	Audience string
 	Required bool
 }
 
-func (j *JWTStub) Name() string { return "jwt_stub" }
+func (j *jwtStub) Name() string { return "jwt_stub" }
 
-func (j *JWTStub) Evaluate(_ context.Context, req Request) (Decision, error) {
+func (j *jwtStub) Evaluate(_ context.Context, req Request) (Decision, error) {
 	auth := ""
 	if req.Headers != nil {
 		auth = req.Headers["Authorization"]
@@ -121,22 +121,22 @@ func (j *JWTStub) Evaluate(_ context.Context, req Request) (Decision, error) {
 	return Decision{Allow: true, Reason: "jwt_stub: aud ok"}, nil
 }
 
-// RemoteStage POSTs the request JSON to URL and expects a Decision JSON body.
-type RemoteStage struct {
+// remoteStage POSTs the request JSON to URL and expects a Decision JSON body.
+type remoteStage struct {
 	URL        string
 	FailClosed bool
 	HTTP       *http.Client
 	Label      string
 }
 
-func (r *RemoteStage) Name() string {
+func (r *remoteStage) Name() string {
 	if r.Label != "" {
 		return r.Label
 	}
 	return "remote"
 }
 
-func (r *RemoteStage) Evaluate(ctx context.Context, req Request) (Decision, error) {
+func (r *remoteStage) Evaluate(ctx context.Context, req Request) (Decision, error) {
 	cli := r.HTTP
 	if cli == nil {
 		cli = &http.Client{Timeout: 5 * time.Second}

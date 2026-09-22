@@ -1,4 +1,4 @@
-package middleware_test
+package middleware
 
 import (
 	"context"
@@ -7,21 +7,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/whaleshell/whaleshell-proxy/proxy/middleware"
 )
 
 func TestJWTStubAudience(t *testing.T) {
 	payload := base64.RawURLEncoding.EncodeToString([]byte(`{"aud":"whaleshell"}`))
 	token := "x." + payload + ".y"
-	st := &middleware.JWTStub{Audience: "whaleshell", Required: true}
-	dec, err := st.Evaluate(context.Background(), middleware.Request{
+	st := &jwtStub{Audience: "whaleshell", Required: true}
+	dec, err := st.Evaluate(context.Background(), Request{
 		Headers: map[string]string{"Authorization": "Bearer " + token},
 	})
 	if err != nil || !dec.Allow {
 		t.Fatalf("dec=%v err=%v", dec, err)
 	}
-	dec, _ = st.Evaluate(context.Background(), middleware.Request{})
+	dec, _ = st.Evaluate(context.Background(), Request{})
 	if dec.Allow {
 		t.Fatal("expected deny without token")
 	}
@@ -29,13 +27,13 @@ func TestJWTStubAudience(t *testing.T) {
 
 func TestRemoteStage(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(middleware.Decision{Allow: false, Reason: "nope"})
+		_ = json.NewEncoder(w).Encode(Decision{Allow: false, Reason: "nope"})
 	}))
 	defer srv.Close()
-	p := &middleware.Pipeline{Stages: []middleware.Stage{
-		&middleware.RemoteStage{URL: srv.URL, FailClosed: true},
+	p := &Pipeline{Stages: []Stage{
+		&remoteStage{URL: srv.URL, FailClosed: true},
 	}}
-	dec, err := p.Run(context.Background(), middleware.Request{Host: "x", Method: "GET", Path: "/"})
+	dec, err := p.Run(context.Background(), Request{Host: "x", Method: "GET", Path: "/"})
 	if err != nil || dec.Allow {
 		t.Fatalf("dec=%v err=%v", dec, err)
 	}

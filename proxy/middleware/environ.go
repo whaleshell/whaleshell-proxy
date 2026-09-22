@@ -26,10 +26,10 @@ func FromEnviron(environ []string) *Pipeline {
 	reqJWT := strings.EqualFold(env["WHALESHELL_MIDDLEWARE_JWT_REQUIRED"], "1") ||
 		strings.EqualFold(env["WHALESHELL_MIDDLEWARE_JWT_REQUIRED"], "true")
 	if aud != "" || reqJWT {
-		stages = append(stages, &JWTStub{Audience: aud, Required: reqJWT || aud != ""})
+		stages = append(stages, &jwtStub{Audience: aud, Required: reqJWT || aud != ""})
 	}
 	if u := strings.TrimSpace(env["WHALESHELL_MIDDLEWARE_REMOTE_URL"]); u != "" {
-		stages = append(stages, &RemoteStage{URL: u, FailClosed: true, Label: "remote_env"})
+		stages = append(stages, &remoteStage{URL: u, FailClosed: true, Label: "remote_env"})
 	}
 	if len(stages) == 0 {
 		return nil
