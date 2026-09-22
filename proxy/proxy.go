@@ -15,10 +15,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zorneth/osg-core"
-	"github.com/zorneth/osg-core/engine"
-	"github.com/zorneth/osg-core/policy"
-	"github.com/zorneth/osg-proxy/proxy/middleware"
+	"github.com/whaleshell/whaleshell-core"
+	"github.com/whaleshell/whaleshell-core/engine"
+	"github.com/whaleshell/whaleshell-core/policy"
+	"github.com/whaleshell/whaleshell-proxy/proxy/middleware"
 )
 
 // EgressProxy applies policy and serves egress for a sandbox network.
@@ -240,7 +240,7 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !dec.Allow {
 		w.WriteHeader(http.StatusForbidden)
-		_, _ = w.Write([]byte("osg-proxy: denied\n"))
+		_, _ = w.Write([]byte("whaleshell-proxy: denied\n"))
 		s.logAudit(auditEvent{
 			Action: "deny", Host: host, Port: port, Reason: dec.Reason, Allow: false,
 			Method: r.Method, Path: pathOnly, Binary: bin,
@@ -256,7 +256,7 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.runMiddleware(r.Context(), host, port, r.Method, pathOnly, r.Header); err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		_, _ = w.Write([]byte("osg-proxy: middleware denied\n"))
+		_, _ = w.Write([]byte("whaleshell-proxy: middleware denied\n"))
 		s.logAudit(auditEvent{
 			Action: "deny", Host: host, Port: port, Reason: err.Error(), Allow: false,
 			Method: r.Method, Path: pathOnly, Binary: bin,
@@ -272,7 +272,7 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 	rewSecrets, err := SecretsForEndpoint(secrets, bound, used)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		_, _ = w.Write([]byte("osg-proxy: credential_endpoint_mismatch\n"))
+		_, _ = w.Write([]byte("whaleshell-proxy: credential_endpoint_mismatch\n"))
 		s.logAudit(auditEvent{
 			Action: "deny", Host: host, Port: port, Reason: err.Error(), Allow: false,
 			Method: r.Method, Path: pathOnly, Binary: bin,
@@ -285,7 +285,7 @@ func (s *Server) handleAbsoluteHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := RewriteHTTPRequest(r, rewSecrets); err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		_, _ = w.Write([]byte("osg-proxy: credential rewrite failed\n"))
+		_, _ = w.Write([]byte("whaleshell-proxy: credential rewrite failed\n"))
 		s.logAudit(auditEvent{
 			Action: "deny", Host: host, Port: port, Reason: "credential rewrite: " + err.Error(), Allow: false,
 			Method: r.Method, Path: pathOnly, Binary: bin,

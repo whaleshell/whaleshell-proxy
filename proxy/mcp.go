@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/zorneth/osg-core/policy"
+	"github.com/whaleshell/whaleshell-core/policy"
 )
 
 // parseMCPRequest extracts JSON-RPC method and optional tools/call name from an HTTP body.

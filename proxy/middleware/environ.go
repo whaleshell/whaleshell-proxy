@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// FromEnviron builds an optional pipeline from OSG_MIDDLEWARE_* env vars.
+// FromEnviron builds an optional pipeline from WHALESHELL_MIDDLEWARE_* env vars.
 //
-//	OSG_MIDDLEWARE_JWT_AUD     — if set, require Bearer JWT with matching aud (unverified stub)
-//	OSG_MIDDLEWARE_JWT_REQUIRED — "1"/"true" to require bearer even without aud
-//	OSG_MIDDLEWARE_REMOTE_URL  — POST Decision JSON stage (fail-closed)
+//	WHALESHELL_MIDDLEWARE_JWT_AUD     — if set, require Bearer JWT with matching aud (unverified stub)
+//	WHALESHELL_MIDDLEWARE_JWT_REQUIRED — "1"/"true" to require bearer even without aud
+//	WHALESHELL_MIDDLEWARE_REMOTE_URL  — POST Decision JSON stage (fail-closed)
 func FromEnviron(environ []string) *Pipeline {
 	if environ == nil {
 		environ = os.Environ()
@@ -22,13 +22,13 @@ func FromEnviron(environ []string) *Pipeline {
 		}
 	}
 	var stages []Stage
-	aud := env["OSG_MIDDLEWARE_JWT_AUD"]
-	reqJWT := strings.EqualFold(env["OSG_MIDDLEWARE_JWT_REQUIRED"], "1") ||
-		strings.EqualFold(env["OSG_MIDDLEWARE_JWT_REQUIRED"], "true")
+	aud := env["WHALESHELL_MIDDLEWARE_JWT_AUD"]
+	reqJWT := strings.EqualFold(env["WHALESHELL_MIDDLEWARE_JWT_REQUIRED"], "1") ||
+		strings.EqualFold(env["WHALESHELL_MIDDLEWARE_JWT_REQUIRED"], "true")
 	if aud != "" || reqJWT {
 		stages = append(stages, &JWTStub{Audience: aud, Required: reqJWT || aud != ""})
 	}
-	if u := strings.TrimSpace(env["OSG_MIDDLEWARE_REMOTE_URL"]); u != "" {
+	if u := strings.TrimSpace(env["WHALESHELL_MIDDLEWARE_REMOTE_URL"]); u != "" {
 		stages = append(stages, &RemoteStage{URL: u, FailClosed: true, Label: "remote_env"})
 	}
 	if len(stages) == 0 {

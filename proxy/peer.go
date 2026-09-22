@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zorneth/osg-core/defaults"
+	"github.com/whaleshell/whaleshell-core/defaults"
 )
 
 type ctxKeyConn struct{}

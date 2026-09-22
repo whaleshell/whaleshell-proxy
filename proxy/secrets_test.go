@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/zorneth/osg-core/env"
-	"github.com/zorneth/osg-proxy/proxy"
+	"github.com/whaleshell/whaleshell-core/env"
+	"github.com/whaleshell/whaleshell-proxy/proxy"
 )
 
 func TestRewriteHeaderQueryPathBasic(t *testing.T) {
@@ -98,7 +98,7 @@ func TestCredentialEndpointMismatch(t *testing.T) {
 }
 
 func TestCredentialKeysSurviveYAML(t *testing.T) {
-	// covered in osg-core; smoke here via FilterSecrets empty semantics
+	// covered in whaleshell-core; smoke here via FilterSecrets empty semantics
 	if len(proxy.FilterSecrets(proxy.SecretStore{"A": "1"}, nil)) != 0 {
 		t.Fatal("empty bound keys must yield empty store")
 	}

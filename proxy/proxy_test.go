@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zorneth/osg-core/engine"
-	"github.com/zorneth/osg-core/policy"
-	"github.com/zorneth/osg-proxy/proxy"
+	"github.com/whaleshell/whaleshell-core/engine"
+	"github.com/whaleshell/whaleshell-core/policy"
+	"github.com/whaleshell/whaleshell-proxy/proxy"
 )
 
 func TestCONNECTAllowDeny(t *testing.T) {

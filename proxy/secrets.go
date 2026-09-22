@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/zorneth/osg-core/env"
+	"github.com/whaleshell/whaleshell-core/env"
 )
 
 // SecretStore maps env key to secret value for placeholder rewrite.
@@ -32,7 +32,7 @@ func FilterSecrets(secrets SecretStore, allowed []string) SecretStore {
 // endpoint that does not bind that credential key (OpenShell credential_endpoint_mismatch).
 var ErrCredentialEndpointMismatch = fmt.Errorf("credential_endpoint_mismatch")
 
-// PlaceholderKeysInRequest lists env keys referenced by osg:/openshell:resolve:env markers
+// PlaceholderKeysInRequest lists env keys referenced by whaleshell:/openshell:resolve:env markers
 // in path, query, and headers (including Basic).
 func PlaceholderKeysInRequest(req *http.Request) []string {
 	if req == nil {
@@ -214,7 +214,7 @@ func rewriteHeaderValue(value string, secrets SecretStore) (string, error) {
 	if secret, ok := resolveExact(trimmed, secrets); ok {
 		return secret, nil
 	}
-	// Prefixed: Bearer osg:resolve:env:KEY
+	// Prefixed: Bearer whaleshell:resolve:env:KEY
 	if i := strings.IndexFunc(trimmed, func(r rune) bool { return r == ' ' || r == '\t' }); i > 0 {
 		prefix := trimmed[:i]
 		cand := strings.TrimSpace(trimmed[i:])

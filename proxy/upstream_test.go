@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zorneth/osg-proxy/proxy"
+	"github.com/whaleshell/whaleshell-proxy/proxy"
 )
 
 func TestDialViaUpstreamProxy(t *testing.T) {

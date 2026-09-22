@@ -1,5 +1,5 @@
 // Package proxy implements mandatory egress (CONNECT + HTTP L7 + TLS terminate).
-// Process logs use github.com/zorneth/slogx via osg-runtime/logging when wired
+// Process logs use github.com/whaleshell/slogx via whaleshell-runtime/logging when wired
 // by the CLI/sidecar entrypoint (App.Proxy); audit lines remain OCSF shorthand
 // on the audit writer.
 package proxy

@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zorneth/osg-core/engine"
-	"github.com/zorneth/osg-core/policy"
+	"github.com/whaleshell/whaleshell-core/engine"
+	"github.com/whaleshell/whaleshell-core/policy"
 )
 
 func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +103,7 @@ func (s *Server) handleCONNECT(w http.ResponseWriter, r *http.Request) {
 
 	if needsL7 && tlsMode != policy.TLSTerminate {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("osg-proxy: L7 over CONNECT requires tls: terminate (or use plaintext absolute-form HTTP)\n"))
+		_, _ = w.Write([]byte("whaleshell-proxy: L7 over CONNECT requires tls: terminate (or use plaintext absolute-form HTTP)\n"))
 		s.logAudit(auditEvent{Action: "deny", Host: host, Port: port, Reason: "l7 connect without terminate", Allow: false})
 		return
 	}
@@ -220,11 +220,11 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 				ProtoMajor: 1,
 				ProtoMinor: 1,
 				Header:     make(http.Header),
-				Body:       io.NopCloser(strings.NewReader("osg-proxy: denied\n")),
+				Body:       io.NopCloser(strings.NewReader("whaleshell-proxy: denied\n")),
 			}
 			resp.Header.Set("Content-Type", "text/plain")
 			resp.Header.Set("Connection", "close")
-			resp.ContentLength = int64(len("osg-proxy: denied\n"))
+			resp.ContentLength = int64(len("whaleshell-proxy: denied\n"))
 			_ = resp.Write(clientTLS)
 			_ = req.Body.Close()
 			return
@@ -241,7 +241,7 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 				Action: "deny", Host: host, Port: port, Reason: err.Error(), Allow: false,
 				Method: req.Method, Path: pathOnly, Binary: binary,
 			})
-			msg := "osg-proxy: middleware denied\n"
+			msg := "whaleshell-proxy: middleware denied\n"
 			resp := &http.Response{
 				StatusCode: http.StatusForbidden,
 				ProtoMajor: 1, ProtoMinor: 1,
@@ -271,7 +271,7 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 				Action: "finding", Host: host, Port: port, Reason: "credential_endpoint_mismatch", Allow: false,
 				Method: req.Method, Path: pathOnly, Binary: binary,
 			})
-			msg := "osg-proxy: credential_endpoint_mismatch\n"
+			msg := "whaleshell-proxy: credential_endpoint_mismatch\n"
 			resp := &http.Response{
 				StatusCode: http.StatusForbidden,
 				ProtoMajor: 1, ProtoMinor: 1,
@@ -288,7 +288,7 @@ func (s *Server) mitmHTTPS(client net.Conn, clientBuf *bufio.Reader, backend net
 				Action: "deny", Host: host, Port: port, Reason: "credential rewrite: " + err.Error(), Allow: false,
 				Method: req.Method, Path: pathOnly, Binary: binary,
 			})
-			msg := "osg-proxy: credential rewrite failed\n"
+			msg := "whaleshell-proxy: credential rewrite failed\n"
 			resp := &http.Response{
 				StatusCode: http.StatusForbidden,
 				ProtoMajor: 1, ProtoMinor: 1,

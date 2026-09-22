@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zorneth/osg-core/policy"
+	"github.com/whaleshell/whaleshell-core/policy"
 )
 
 // WatchPolicy polls path for content changes and calls Apply on the server.

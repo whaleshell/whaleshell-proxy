@@ -43,8 +43,8 @@ func GenerateMitmCA() (*MitmCA, error) {
 	tmpl := &x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
-			Organization: []string{"osg"},
-			CommonName:   "osg Sandbox Proxy CA",
+			Organization: []string{"whaleshell"},
+			CommonName:   "whaleshell Sandbox Proxy CA",
 		},
 		NotBefore:             time.Now().Add(-time.Hour),
 		NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour),
@@ -96,7 +96,7 @@ func (c *MitmCA) WritePEM(path string) error {
 	return os.WriteFile(path, c.pem, 0o644)
 }
 
-// WriteBundle writes system CA roots (if found) plus the osg CA to path.
+// WriteBundle writes system CA roots (if found) plus the whaleshell CA to path.
 func (c *MitmCA) WriteBundle(path string) error {
 	if c == nil {
 		return fmt.Errorf("mitm: nil ca")

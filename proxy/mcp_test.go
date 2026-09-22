@@ -3,7 +3,7 @@ package proxy
 import (
 	"testing"
 
-	"github.com/zorneth/osg-core/policy"
+	"github.com/whaleshell/whaleshell-core/policy"
 )
 
 func TestMCPMatchHTTP(t *testing.T) {

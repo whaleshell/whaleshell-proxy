@@ -5,7 +5,7 @@ import (
 	"net/netip"
 	"testing"
 
-	"github.com/zorneth/osg-proxy/proxy"
+	"github.com/whaleshell/whaleshell-proxy/proxy"
 )
 
 func TestSSRFBlocksLoopback(t *testing.T) {

@@ -8,13 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/zorneth/osg-proxy/proxy/middleware"
+	"github.com/whaleshell/whaleshell-proxy/proxy/middleware"
 )
 
 func TestJWTStubAudience(t *testing.T) {
-	payload := base64.RawURLEncoding.EncodeToString([]byte(`{"aud":"osg"}`))
+	payload := base64.RawURLEncoding.EncodeToString([]byte(`{"aud":"whaleshell"}`))
 	token := "x." + payload + ".y"
-	st := &middleware.JWTStub{Audience: "osg", Required: true}
+	st := &middleware.JWTStub{Audience: "whaleshell", Required: true}
 	dec, err := st.Evaluate(context.Background(), middleware.Request{
 		Headers: map[string]string{"Authorization": "Bearer " + token},
 	})

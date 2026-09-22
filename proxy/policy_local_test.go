@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 zorneth
+// SPDX-FileCopyrightText: Copyright (c) 2026 whaleshell
 // SPDX-License-Identifier: MIT
 
 package proxy
@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zorneth/osg-core/engine"
-	"github.com/zorneth/osg-core/policy"
+	"github.com/whaleshell/whaleshell-core/engine"
+	"github.com/whaleshell/whaleshell-core/policy"
 )
 
 func TestServePolicyLocalRoutes(t *testing.T) {
