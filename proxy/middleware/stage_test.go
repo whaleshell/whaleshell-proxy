@@ -38,3 +38,32 @@ func TestRemoteStage(t *testing.T) {
 		t.Fatalf("dec=%v err=%v", dec, err)
 	}
 }
+
+func TestRemoteStageOversizedFailClosed(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(make([]byte, maxRemoteStageBody+8))
+	}))
+	defer srv.Close()
+	st := &remoteStage{URL: srv.URL, FailClosed: true}
+	dec, err := st.Evaluate(context.Background(), Request{Host: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dec.Allow || dec.Reason != "remote stage response too large" {
+		t.Fatalf("dec=%+v", dec)
+	}
+}
+
+func TestRemoteStageOversizedFailOpen(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(make([]byte, maxRemoteStageBody+8))
+	}))
+	defer srv.Close()
+	st := &remoteStage{URL: srv.URL, FailClosed: false}
+	dec, err := st.Evaluate(context.Background(), Request{Host: "x"})
+	if err != nil || !dec.Allow {
+		t.Fatalf("dec=%+v err=%v", dec, err)
+	}
+}

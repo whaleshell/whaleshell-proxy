@@ -155,7 +155,13 @@ func (r *remoteStage) Evaluate(ctx context.Context, req Request) (Decision, erro
 		return Decision{Allow: true, Reason: "remote stage fail-open"}, nil
 	}
 	defer res.Body.Close()
-	b, _ := io.ReadAll(res.Body)
+	b, _ := io.ReadAll(io.LimitReader(res.Body, maxRemoteStageBody))
+	if int64(len(b)) >= maxRemoteStageBody {
+		if r.FailClosed {
+			return Decision{Allow: false, Reason: "remote stage response too large"}, nil
+		}
+		return Decision{Allow: true, Reason: "remote stage fail-open oversized"}, nil
+	}
 	if res.StatusCode >= 300 {
 		if r.FailClosed {
 			return Decision{Allow: false, Reason: fmt.Sprintf("remote stage http %s", res.Status)}, nil
@@ -171,3 +177,6 @@ func (r *remoteStage) Evaluate(ctx context.Context, req Request) (Decision, erro
 	}
 	return dec, nil
 }
+
+// maxRemoteStageBody caps remote middleware HTTP responses (decision JSON).
+const maxRemoteStageBody = 1 << 20 // 1 MiB
