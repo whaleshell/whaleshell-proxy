@@ -331,6 +331,7 @@ func (s *Server) persistProposal(p *localProposal) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	s.gatewayAuth(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		// Keep local pending; host can still sync later.
@@ -460,6 +461,7 @@ func (s *Server) refreshProposalFromGateway(id string) {
 	if err != nil {
 		return
 	}
+	s.gatewayAuth(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
@@ -527,4 +529,10 @@ func DenyBodyJSON(host string, port int, reason string) []byte {
 		},
 	})
 	return b
+}
+
+func (s *Server) gatewayAuth(req *http.Request) {
+	if tok := strings.TrimSpace(s.GatewayToken); tok != "" {
+		req.Header.Set("Authorization", "Bearer "+tok)
+	}
 }

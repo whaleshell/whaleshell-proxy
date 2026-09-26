@@ -42,6 +42,9 @@ type Server struct {
 	// UpstreamTLS overrides the TLS client config used when dialing real backends after terminate.
 	// Tests may set InsecureSkipVerify; production leaves this nil (system roots).
 	UpstreamTLS *tls.Config
+	// GatewayToken is the sandbox-scoped supervisor bearer for gateway calls
+	// (proposals). Never exposed to placeholder resolution.
+	GatewayToken string
 
 	denials   []denialLine
 	proposals map[string]*localProposal

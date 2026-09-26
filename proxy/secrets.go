@@ -125,7 +125,15 @@ func SecretsForEndpoint(secrets SecretStore, boundKeys, usedKeys []string) (Secr
 	return FilterSecrets(secrets, boundKeys), nil
 }
 
-// LoadSecretsFromEnviron builds a store from KEY=VAL entries (skips passthrough keys).
+// controlPlaneKeys are gateway credentials of the sidecar itself; a sandbox
+// placeholder must never resolve them into outbound traffic.
+var controlPlaneKeys = map[string]struct{}{
+	"WHALESHELL_SANDBOX_TOKEN": {},
+	"WHALESHELL_GATEWAY_TOKEN": {},
+}
+
+// LoadSecretsFromEnviron builds a store from KEY=VAL entries (skips passthrough
+// and control-plane keys).
 func LoadSecretsFromEnviron(environ []string) SecretStore {
 	out := make(SecretStore)
 	for _, entry := range environ {
@@ -134,6 +142,9 @@ func LoadSecretsFromEnviron(environ []string) SecretStore {
 			continue
 		}
 		if env.IsPassthrough(k) {
+			continue
+		}
+		if _, ok := controlPlaneKeys[k]; ok {
 			continue
 		}
 		out[k] = v

@@ -111,3 +111,19 @@ func stringsTrimBasic(v string) string {
 	}
 	return v
 }
+
+func TestLoadSecretsFromEnvironSkipsControlPlaneTokens(t *testing.T) {
+	store := proxy.LoadSecretsFromEnviron([]string{
+		"OPENAI_API_KEY=sk-real",
+		"WHALESHELL_SANDBOX_TOKEN=supervisor-secret",
+		"WHALESHELL_GATEWAY_TOKEN=operator-secret",
+	})
+	if store["OPENAI_API_KEY"] != "sk-real" {
+		t.Fatalf("credential missing: %v", store)
+	}
+	for _, k := range []string{"WHALESHELL_SANDBOX_TOKEN", "WHALESHELL_GATEWAY_TOKEN"} {
+		if _, ok := store[k]; ok {
+			t.Fatalf("%s must never be resolvable by sandbox placeholders", k)
+		}
+	}
+}
