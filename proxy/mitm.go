@@ -17,7 +17,13 @@ import (
 	"time"
 )
 
-const maxCachedLeafs = 256
+const (
+	maxCachedLeafs = 256
+	leafTTL        = 24 * time.Hour
+	// Cached leafs are re-issued once they get this close to NotAfter, so a
+	// long-running sidecar never presents an expired certificate.
+	leafRenewBefore = time.Hour
+)
 
 // MitmCA is an ephemeral sandbox CA used for TLS terminate (HTTPS L7).
 type MitmCA struct {
@@ -137,7 +143,7 @@ func (c *MitmCA) Leaf(hostname string) (*tls.Certificate, error) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if leaf, ok := c.leafs[host]; ok {
+	if leaf, ok := c.leafs[host]; ok && leaf.Leaf != nil && time.Until(leaf.Leaf.NotAfter) > leafRenewBefore {
 		return leaf, nil
 	}
 	leaf, err := c.generateLeaf(host)
@@ -164,7 +170,7 @@ func (c *MitmCA) generateLeaf(hostname string) (*tls.Certificate, error) {
 		SerialNumber: serial,
 		Subject:      pkix.Name{CommonName: hostname},
 		NotBefore:    time.Now().Add(-time.Hour),
-		NotAfter:     time.Now().Add(24 * time.Hour),
+		NotAfter:     time.Now().Add(leafTTL),
 		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		DNSNames:     []string{hostname},
@@ -187,6 +193,9 @@ func (c *MitmCA) generateLeaf(hostname string) (*tls.Certificate, error) {
 	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
 	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
+		return nil, err
+	}
+	if tlsCert.Leaf, err = x509.ParseCertificate(der); err != nil {
 		return nil, err
 	}
 	return &tlsCert, nil
